@@ -1,6 +1,6 @@
 class ScrnVotingOptions extends Info
     abstract;
-    
+
 var ScrnVotingHandlerMut VotingHandler;
 
 var string DefaultGroup; // in cases of MUTATE VOTE GROUP KEY VALUE
@@ -30,13 +30,13 @@ function Destroyed()
 {
     if ( VotingHandler != none )
         VotingHandler.RemoveVotingOptions(self.class);
-        
+
     super.Destroyed();
 }
 
-/*  
+/*
     This function is called by VotingHandler immediatelly after the spawn.
-    It should register the voting groups for GetGroupVoteIndex() callings. 
+    It should register the voting groups for GetGroupVoteIndex() callings.
 */
 function InitGroups()
 {
@@ -54,7 +54,7 @@ function InitGroups()
     If value is already set, or can not vote at the current moment, return VOTE_NOEFECT.
     If Key is correct, but no vote should be done (e.g. displaying additional help on command)
         return VOTE_LOCAL
-    
+
     Keys are case-insensitive and are already passed in upper case.
 */
 function int GetVoteIndex(PlayerController Sender, string Key, out string Value, out string VoteInfo)
@@ -73,7 +73,7 @@ function ApplyVoteValue(int VoteIndex, string VoteValue);
 function int TryStrToBool(string str)
 {
     local int i;
-    
+
     for ( i = 0; i < TrueStrings.Length; ++i ) {
         if ( str ~= TrueStrings[i] ) {
             return 1;
@@ -83,7 +83,25 @@ function int TryStrToBool(string str)
         if ( str ~= FalseStrings[i] ) {
             return 0;
         }
-    }    
+    }
+
+    return -1;
+}
+
+static function int TryStrToBoolStatic(string str)
+{
+    local int i;
+
+    for ( i = 0; i < default.TrueStrings.Length; ++i ) {
+        if ( str ~= default.TrueStrings[i] ) {
+            return 1;
+        }
+    }
+    for ( i = 0; i < default.FalseStrings.Length; ++i ) {
+        if ( str ~= default.FalseStrings[i] ) {
+            return 0;
+        }
+    }
 
     return -1;
 }
@@ -93,7 +111,7 @@ function SendPlayerList(PlayerController Sender)
 	local array<PlayerReplicationInfo> AllPRI;
     local PlayerController PC;
 	local int i;
-	
+
 	Level.Game.GameReplicationInfo.GetPRIArray(AllPRI);
 	for (i = 0; i<AllPRI.Length; i++) {
         PC = PlayerController(AllPRI[i].Owner);
@@ -101,17 +119,17 @@ function SendPlayerList(PlayerController Sender)
 			Sender.ClientMessage(Right("   "$AllPRI[i].PlayerID, 3)$")"
                 //@ PC.GetPlayerIDHash()
                 @ AllPRI[i].PlayerName);
-	}	
+	}
 }
 
 function PlayerController FindPlayer(string NameOrID)
 {
 	local Controller C;
      local PlayerController PC;
-	
+
 	if ( NameOrID == "" || NameOrID == "0" || NameOrID ~= "WebAdmin" )
 		return none;
-		
+
 	for ( C = Level.ControllerList; C != None; C = C.NextController ) {
         PC = PlayerController(C);
 		if ( PC != None && C.PlayerReplicationInfo != None ) {
@@ -128,16 +146,16 @@ function PlayerController FindPlayer(string NameOrID)
 function SendGroupHelp(PlayerController Sender, string Group)
 {
     local int i;
-    
+
     if ( !bHelpPrepared ) {
         bHelpPrepared = true;
         for ( i=0; i<GroupInfo.length; ++i ) {
             GroupInfo[i] = VotingHandler.ParseHelpLine(GroupInfo[i]);
         }
     }
-    
-    for ( i=0; i<GroupInfo.length; ++i ) 
-        Sender.ClientMessage(GroupInfo[i]);    
+
+    for ( i=0; i<GroupInfo.length; ++i )
+        Sender.ClientMessage(GroupInfo[i]);
 }
 
 
@@ -155,7 +173,7 @@ defaultproperties
     FalseStrings(2)="0"
     FalseStrings(3)="NO"
     FalseStrings(4)="DISABLE"
-    
+
     strRestartRequired="Map restart required to apply changes"
 	strOptionDisabled="Voting option is disabled on the server"
 	strNotAvaliableATM="Voting option is not avaliable at this moment"

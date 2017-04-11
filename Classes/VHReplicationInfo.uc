@@ -19,7 +19,7 @@ replication {
 		VoteID, VoteStatus, YesVotes, NoVotes, VoteName;
 }
 
-simulated function PostNetReceive() 
+simulated function PostNetReceive()
 {
 	if ( Level.NetMode != NM_DedicatedServer && VoteStatus != VS_INACTIVE ) {
 		if ( myInteraction == none )
@@ -29,7 +29,7 @@ simulated function PostNetReceive()
 			log("Unable to spawn Voting Interaction", class.outer.name);
 			return;
 		}
-			
+
 		myInteraction.VoteName = VoteName; //just to be sure
 		if ( VoteStatus == VS_INPROGRESS ) {
 			if ( OldVoteStatus != VS_INPROGRESS) {
@@ -38,7 +38,7 @@ simulated function PostNetReceive()
 			myInteraction.UpdateVotes(YesVotes, NoVotes);
 		}
 		else {
-			myInteraction.VoteEnded(VoteStatus == VS_PASSED);	
+			myInteraction.VoteEnded(VoteStatus == VS_PASSED);
 		}
 		OldVoteStatus = VoteStatus;
 	}
@@ -49,11 +49,11 @@ simulated function PreBeginPlay()
     local VHInteraction RemoveMe;
 
 	super.PreBeginPlay();
-	
+
 	// remove interaction left from previous map
 	foreach AllObjects(class'VHInteraction', RemoveMe) {
 		RemoveMe.Master.RemoveInteraction(RemoveMe);
-	}	
+	}
 }
 
 function UpdateVoteStatus(Actor Updater, int Status, String VoteName, int YesVotes, int NoVotes, byte VoteID)
@@ -66,18 +66,27 @@ function UpdateVoteStatus(Actor Updater, int Status, String VoteName, int YesVot
 	NetUpdateTime = Level.TimeSeconds - 1;
 	if ( Level.GetLocalPlayerController() != none )
 		PostNetReceive(); // solo mode or listen servers
+
+    if ( VoteStatus == VS_PASSED || VoteStatus == VS_FAILED ) {
+        SetTimer(1, false); // bug fix when late joiners received status of already ended vote
+    }
+}
+
+function Timer()
+{
+    VoteStatus = VS_INACTIVE;
 }
 
 
 simulated function SpawnInteraction()
 {
     local PlayerController PC;
-	
+
 	if ( myInteraction != none )
 		return;
- 
+
     PC = Level.GetLocalPlayerController();
-    if (PC != None ) { 
+    if (PC != None ) {
         myInteraction = VHInteraction(PC.Player.InteractionMaster.AddInteraction(String(InteractionClass),PC.Player));
     }
 }
@@ -85,7 +94,7 @@ simulated function SpawnInteraction()
 simulated function Destroyed()
 {
 	super.Destroyed();
-	
+
 	if ( myInteraction != none )
 		myInteraction.Master.RemoveInteraction(myInteraction);
 }
