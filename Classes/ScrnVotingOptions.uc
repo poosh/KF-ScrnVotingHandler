@@ -108,39 +108,39 @@ static function int TryStrToBoolStatic(string str)
 
 function SendPlayerList(PlayerController Sender)
 {
-	local array<PlayerReplicationInfo> AllPRI;
+    local array<PlayerReplicationInfo> AllPRI;
     local PlayerController PC;
-	local int i;
+    local int i;
 
-	Level.Game.GameReplicationInfo.GetPRIArray(AllPRI);
-	for (i = 0; i<AllPRI.Length; i++) {
+    Level.Game.GameReplicationInfo.GetPRIArray(AllPRI);
+    for (i = 0; i<AllPRI.Length; i++) {
         PC = PlayerController(AllPRI[i].Owner);
-		if( PC != none && AllPRI[i].PlayerName != "WebAdmin")
-			Sender.ClientMessage(Right("   "$AllPRI[i].PlayerID, 3)$")"
+        if( PC != none && AllPRI[i].PlayerName != "WebAdmin")
+            Sender.ClientMessage(Right("   "$AllPRI[i].PlayerID, 3)$")"
                 //@ PC.GetPlayerIDHash()
                 @ AllPRI[i].PlayerName);
-	}
+    }
 }
 
 function PlayerController FindPlayer(string NameOrID)
 {
-	local Controller C;
+    local Controller C;
      local PlayerController PC;
 
-	if ( NameOrID == "" || NameOrID == "0" || NameOrID ~= "WebAdmin" )
-		return none;
+    if ( NameOrID == "" || NameOrID == "0" || NameOrID ~= "WebAdmin" )
+        return none;
 
-	for ( C = Level.ControllerList; C != None; C = C.NextController ) {
+    for ( C = Level.ControllerList; C != None; C = C.NextController ) {
         PC = PlayerController(C);
-		if ( PC != None && C.PlayerReplicationInfo != None ) {
-			if ( (C.PlayerReplicationInfo.PlayerID > 0 && String(C.PlayerReplicationInfo.PlayerID) == NameOrID)
-					|| C.PlayerReplicationInfo.PlayerName ~= NameOrID )
+        if ( PC != None && C.PlayerReplicationInfo != None ) {
+            if ( (C.PlayerReplicationInfo.PlayerID > 0 && String(C.PlayerReplicationInfo.PlayerID) == NameOrID)
+                    || C.PlayerReplicationInfo.PlayerName ~= NameOrID )
             {
-				return PC;
+                return PC;
             }
-		}
-	}
-	return none;
+        }
+    }
+    return none;
 }
 
 function SendGroupHelp(PlayerController Sender, string Group)
@@ -175,7 +175,7 @@ defaultproperties
     FalseStrings(4)="DISABLE"
 
     strRestartRequired="Map restart required to apply changes"
-	strOptionDisabled="Voting option is disabled on the server"
-	strNotAvaliableATM="Voting option is not avaliable at this moment"
-	strPlayerNotFound="Player with a given ID or name does not exist"
+    strOptionDisabled="Voting option is disabled on the server"
+    strNotAvaliableATM="Voting option is not avaliable at this moment"
+    strPlayerNotFound="Player with a given ID or name does not exist"
 }

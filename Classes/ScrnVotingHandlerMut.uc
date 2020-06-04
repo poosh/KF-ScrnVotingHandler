@@ -90,8 +90,8 @@ static function ScrnVotingHandlerMut GetVotingHandler(GameInfo Game)
 {
     local Mutator mut;
 
-	for ( mut = Game.BaseMutator; mut != none; mut = mut.NextMutator ) {
-		if ( ScrnVotingHandlerMut(mut) != none )
+    for ( mut = Game.BaseMutator; mut != none; mut = mut.NextMutator ) {
+        if ( ScrnVotingHandlerMut(mut) != none )
             return ScrnVotingHandlerMut(mut);
     }
 
@@ -277,9 +277,9 @@ function Vote(string VoteString, PlayerController Sender)
             BroadcastMessage(GetVoteStatus(Sender, true));
             if ( float(VotersYes.length) / MaxVoters() * 100.0 >= VotePercent )
                 VotePassed();
-			else {
-				VHRI.UpdateVoteStatus(self, VHRI.VS_INPROGRESS, VoteInfo, VotersYes.length, VotersNo.length, VoteID);
-			}
+            else {
+                VHRI.UpdateVoteStatus(self, VHRI.VS_INPROGRESS, VoteInfo, VotersYes.length, VotersNo.length, VoteID);
+            }
         }
         else if ( VoteString != "TRYYES" )
             Sender.ClientMessage(strNoVoteInProgress);
@@ -322,15 +322,15 @@ function Vote(string VoteString, PlayerController Sender)
             BroadcastMessage(GetVoteStatus(Sender, false));
             if ( float(MaxVoters() - VotersNo.length) / MaxVoters() * 100.0 < VotePercent )
                 VoteFailed(); // vote fails when it can't theoretically pass the vote
-			else
-				VHRI.UpdateVoteStatus(self, VHRI.VS_INPROGRESS, VoteInfo, VotersYes.length, VotersNo.length, VoteID);
+            else
+                VHRI.UpdateVoteStatus(self, VHRI.VS_INPROGRESS, VoteInfo, VotersYes.length, VotersNo.length, VoteID);
         }
         else if ( VoteString != "TRYNO" )
             Sender.ClientMessage(strNoVoteInProgress);
     }
     else if ( bVoteInProgress )
         Sender.ClientMessage(strVoteInProgress);
-	else if ( !MayStartVoting(Sender))
+    else if ( !MayStartVoting(Sender))
         Sender.ClientMessage(strPlayerBlocked);
     else {
         VoteInfo = "";
@@ -424,29 +424,29 @@ function Vote(string VoteString, PlayerController Sender)
 
 function bool MayStartVoting(PlayerController Sender)
 {
-	local int i;
+    local int i;
 
-	if ( Sender.PlayerReplicationInfo == none )
-		return false;
-	// admins can always vote
-	if ( Sender.PlayerReplicationInfo.bAdmin )
-		return true;
-	// spectators can't vote
-	if ( Sender.PlayerReplicationInfo.bOnlySpectator )
-		return false;
+    if ( Sender.PlayerReplicationInfo == none )
+        return false;
+    // admins can always vote
+    if ( Sender.PlayerReplicationInfo.bAdmin )
+        return true;
+    // spectators can't vote
+    if ( Sender.PlayerReplicationInfo.bOnlySpectator )
+        return false;
 
-	if ( Level.Game.NumPlayers == 1 )
-		return true;
+    if ( Level.Game.NumPlayers == 1 )
+        return true;
 
-	if ( Sender == FailedVoter && Level.TimeSeconds < FailedVoterBlockTime )
-		return false;
+    if ( Sender == FailedVoter && Level.TimeSeconds < FailedVoterBlockTime )
+        return false;
 
-	for ( i=0; i<BlockedVoters.length; ++i ) {
-		if ( BlockedVoters[i] == Sender)
-			return false;
-	}
+    for ( i=0; i<BlockedVoters.length; ++i ) {
+        if ( BlockedVoters[i] == Sender)
+            return false;
+    }
 
-	return true;
+    return true;
 }
 
 function BroadcastMessage(string msg)
@@ -475,7 +475,7 @@ function StartVoting(PlayerController Initiator)
     VotersYes[0] = Initiator;
     VotersNo.Length = 0;
     bVoteInProgress = true;
-	VoteID++;
+    VoteID++;
 
     if ( Level.NetMode == NM_Standalone || Initiator.PlayerReplicationInfo.bAdmin ) {
         VotePassed(Initiator.PlayerReplicationInfo.PlayerName);
@@ -491,7 +491,7 @@ function StartVoting(PlayerController Initiator)
         ReplaceText(msg, "%p", Initiator.PlayerReplicationInfo.PlayerName);
         ReplaceText(msg, "%v", VoteInfo);
         BroadcastMessage(chr(27)$chr(200)$chr(200)$chr(1)$msg);
-		VHRI.UpdateVoteStatus(self, VHRI.VS_INPROGRESS, VoteInfo, VotersYes.length, VotersNo.length, VoteID);
+        VHRI.UpdateVoteStatus(self, VHRI.VS_INPROGRESS, VoteInfo, VotersYes.length, VotersNo.length, VoteID);
         VoteSecondsLeft = VoteCountDown;
         SetTimer(1, true);
     }
@@ -502,7 +502,7 @@ function Timer()
     if ( VoteInitiator == none ) {
         EndVoting();
         BroadcastMessage(chr(27)$chr(200)$chr(1)$chr(1)$strVoteFailedInitiator);
-		VHRI.UpdateVoteStatus(self, VHRI.VS_FAILED, VoteInfo, VotersYes.length, VotersNo.length, VoteID);
+        VHRI.UpdateVoteStatus(self, VHRI.VS_FAILED, VoteInfo, VotersYes.length, VotersNo.length, VoteID);
     }
     else if ( bVotedPlayer && (VotedPlayer == none || VotedPlayer.PlayerReplicationInfo == none) ) {
         EndVoting();
@@ -510,14 +510,14 @@ function Timer()
         VHRI.UpdateVoteStatus(self, VHRI.VS_FAILED, VoteInfo, VotersYes.length, VotersNo.length, VoteID);
     }
     else if ( --VoteSecondsLeft <= 0 ) {
-		if ( float(VotersYes.length) / MaxVoters() * 100.0 >= VotePercentCountDown ) {
-			VotePassed(strTimeout);
-		}
-		else {
-			EndVoting();
-			BroadcastMessage(strVoteTimeout);
-			VHRI.UpdateVoteStatus(self, VHRI.VS_FAILED, VoteInfo, VotersYes.length, VotersNo.length, VoteID);
-		}
+        if ( float(VotersYes.length) / MaxVoters() * 100.0 >= VotePercentCountDown ) {
+            VotePassed(strTimeout);
+        }
+        else {
+            EndVoting();
+            BroadcastMessage(strVoteTimeout);
+            VHRI.UpdateVoteStatus(self, VHRI.VS_FAILED, VoteInfo, VotersYes.length, VotersNo.length, VoteID);
+        }
     }
 }
 
@@ -539,30 +539,30 @@ function VotePassed(optional String ForcedByPlayerName)
 
     if ( VoteInitiator == none ) {
         BroadcastMessage(chr(27)$chr(200)$chr(1)$chr(1)$strVoteFailedInitiator);
-		VHRI.UpdateVoteStatus(self, VHRI.VS_FAILED, VoteInfo, VotersYes.length, VotersNo.length, VoteID);
+        VHRI.UpdateVoteStatus(self, VHRI.VS_FAILED, VoteInfo, VotersYes.length, VotersNo.length, VoteID);
         return;
     }
 
     CurrentVotingObject.ApplyVoteValue(VoteIndex, VoteValue);
     msg = strVotePassed;
     ReplaceText(msg, "%v", VoteInfo);
-	if ( ForcedByPlayerName != "" ) {
-		msg @=  strForcedByAdmin;
-		ReplaceText(msg, "%p", ForcedByPlayerName);
-	}
+    if ( ForcedByPlayerName != "" ) {
+        msg @=  strForcedByAdmin;
+        ReplaceText(msg, "%p", ForcedByPlayerName);
+    }
     BroadcastMessage(chr(27)$chr(1)$chr(200)$chr(1)$msg);
-	VHRI.UpdateVoteStatus(self, VHRI.VS_PASSED, VoteInfo, VotersYes.length, VotersNo.length, VoteID);
+    VHRI.UpdateVoteStatus(self, VHRI.VS_PASSED, VoteInfo, VotersYes.length, VotersNo.length, VoteID);
 }
 
 function VoteFailed()
 {
-	if ( VoteCoolDown > 0 ) {
-		FailedVoter = VoteInitiator;
-		FailedVoterBlockTime = Level.TimeSeconds + VoteCoolDown;
-	}
+    if ( VoteCoolDown > 0 ) {
+        FailedVoter = VoteInitiator;
+        FailedVoterBlockTime = Level.TimeSeconds + VoteCoolDown;
+    }
     EndVoting();
     BroadcastMessage(chr(27)$chr(200)$chr(1)$chr(1)$strVoteFailed);
-	VHRI.UpdateVoteStatus(self, VHRI.VS_FAILED, VoteInfo, VotersYes.length, VotersNo.length, VoteID);
+    VHRI.UpdateVoteStatus(self, VHRI.VS_FAILED, VoteInfo, VotersYes.length, VotersNo.length, VoteID);
 }
 
 static function string ParseHelpLine(string s)
@@ -620,8 +620,8 @@ simulated function PostBeginPlay()
         return;
     }
 
-	VHRI = Spawn(VHReplicationInfoClass, self);
-	VHRI.mutRef = Self;
+    VHRI = Spawn(VHReplicationInfoClass, self);
+    VHRI.mutRef = Self;
 }
 
 //returns true, if specifield vote is in progress
@@ -636,8 +636,8 @@ defaultproperties
 {
     VoteCountDown=70
     VotePercent=51.000
-	VotePercentCountDown=51.00
-	VoteCoolDown=10
+    VotePercentCountDown=51.00
+    VoteCoolDown=10
 
     strVersion="ScrN Voting Handler v%m.%n"
 
@@ -659,8 +659,8 @@ defaultproperties
     strVoteStatus="Current vote: %v (+%y -%n)"
     strSpectatorsCantVote="Spectators can not vote!"
     strOtherTeamVote="Can't participate in other team's voting!"
-	strTimeout="TIMEOUT"
-	strPlayerBlocked="You are disallowed to start a voting"
+    strTimeout="TIMEOUT"
+    strPlayerBlocked="You are disallowed to start a voting"
 
     HelpInfo(0)="%bVoting Options:"
     HelpInfo(1)="%gHELP %w Show this information"
@@ -671,7 +671,7 @@ defaultproperties
     FriendlyName="ScrN Voting Handler"
     Description="Allows voting via MUTATE VOTE console command"
 
-	bAddToServerPackages=true
+    bAddToServerPackages=true
 
-	VHReplicationInfoClass=class'ScrnVotingHandlerV4.VHReplicationInfo'
+    VHReplicationInfoClass=class'ScrnVotingHandlerV4.VHReplicationInfo'
 }
