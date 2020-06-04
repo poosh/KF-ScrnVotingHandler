@@ -4,7 +4,7 @@ class ScrnVotingHandlerMut extends Mutator
 var globalconfig int VoteCountDown;
 var globalconfig float VotePercent, VotePercentCountDown;
 
-const VERSION = 40500;
+const VERSION = 40600;
 var localized string strVersion;
 
 var protected bool bVoteInProgress;
@@ -622,6 +622,17 @@ simulated function PostBeginPlay()
 
     VHRI = Spawn(VHReplicationInfoClass, self);
     VHRI.mutRef = Self;
+}
+
+function ServerTraveling(string URL, bool bItems)
+{
+    if (NextMutator != None)
+        NextMutator.ServerTraveling(URL,bItems);
+
+    if ( VHRI != none ) {
+        VHRI.Destroy();
+        VHRI = none;
+    }
 }
 
 //returns true, if specifield vote is in progress

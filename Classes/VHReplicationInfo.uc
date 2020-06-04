@@ -1,9 +1,9 @@
 class VHReplicationInfo extends ReplicationInfo;
 
-var ScrnVotingHandlerMut mutRef;
+var transient ScrnVotingHandlerMut mutRef;
 
 var class<VHInteraction> InteractionClass;
-var VHInteraction myInteraction;
+var transient VHInteraction myInteraction;
 
 var String VoteName;
 var int YesVotes, NoVotes;
@@ -50,9 +50,23 @@ simulated function PreBeginPlay()
 
     super.PreBeginPlay();
 
-    // remove interaction left from previous map
+    // remove interaction left the from previous map
     foreach AllObjects(class'VHInteraction', RemoveMe) {
-        RemoveMe.Master.RemoveInteraction(RemoveMe);
+        if ( RemoveMe.VHRI == self ) {
+            // wtf? shouldn't happen
+            log(RemoveMe $ " seems to be myInteraction", class.outer.name);
+            myInteraction = RemoveMe;
+        }
+        else {
+            log(RemoveMe $ " left from the previous game", class.outer.name);
+            if ( RemoveMe.VHRI != none ) {
+                RemoveMe.VHRI.myInteraction = none;
+                RemoveMe.VHRI = none;
+            }
+            if ( RemoveMe.Master != none ) {
+                RemoveMe.Master.RemoveInteraction(RemoveMe);
+            }
+        }
     }
 }
 
@@ -88,15 +102,24 @@ simulated function SpawnInteraction()
     PC = Level.GetLocalPlayerController();
     if (PC != None ) {
         myInteraction = VHInteraction(PC.Player.InteractionMaster.AddInteraction(String(InteractionClass),PC.Player));
+        if ( myInteraction != none ) {
+            myInteraction.VHRI = self;
+        }
+        else {
+            warn("Cannot add interaction " $ String(InteractionClass));
+        }
     }
 }
 
 simulated function Destroyed()
 {
-    super.Destroyed();
-
-    if ( myInteraction != none )
+    if ( myInteraction != none ) {
         myInteraction.Master.RemoveInteraction(myInteraction);
+        myInteraction.VHRI = none;
+        myInteraction = none;
+    }
+
+    super.Destroyed();
 }
 
 defaultproperties
