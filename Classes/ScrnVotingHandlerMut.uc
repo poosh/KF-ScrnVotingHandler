@@ -1,11 +1,8 @@
-class ScrnVotingHandlerMut extends Mutator
+class ScrnVotingHandlerMut extends ScrnMutator
     Config(ScrnVoting);
 
 var globalconfig int VoteCountDown;
 var globalconfig float VotePercent, VotePercentCountDown;
-
-const VERSION = 40600;
-var localized string strVersion;
 
 var protected bool bVoteInProgress;
 var protected int VoteSecondsLeft;
@@ -50,27 +47,6 @@ struct SVoteGroup
 };
 var array<SVoteGroup> VoteGroups;
 
-static function string GetVersionStr()
-{
-    local String msg, s;
-    local int v, sub_v;
-
-    msg = default.strVersion;
-    v = VERSION / 100;
-    sub_v = VERSION % 100;
-
-    s = String(int(v%100));
-    if ( len(s) == 1 )
-        s = "0" $ s;
-    if ( sub_v > 0 )
-        s @= "(BETA "$sub_v$")";
-    ReplaceText(msg, "%n", s);
-
-    s = String(v/100);
-    ReplaceText(msg, "%m",s);
-
-    return msg;
-}
 
 function Mutate(string MutateString, PlayerController Sender)
 {
@@ -80,9 +56,6 @@ function Mutate(string MutateString, PlayerController Sender)
         Vote(Right(MutateString, len(MutateString)-5), Sender);
     else {
         super.Mutate(MutateString, Sender);
-
-        if ( MutateString ~= "version" )
-            Sender.ClientMessage(GetVersionStr());
     }
 }
 
@@ -179,8 +152,6 @@ static function string Trim(string str)
     return str;
 }
 
-
-
 function bool IsVoteInProgress()
 {
     return bVoteInProgress;
@@ -198,14 +169,14 @@ function string GetVoteStatus(optional PlayerController Voter, optional bool bVo
             result = strVotedYes;
         else
             result = strVotedNo;
-        ReplaceText(result, "%p", Voter.PlayerReplicationInfo.PlayerName);
+        result = Repl(result, "%p", Voter.PlayerReplicationInfo.PlayerName, true);
     }
     else {
         result = strVoteStatus;
     }
-    ReplaceText(result, "%v", VoteInfo);
-    ReplaceText(result, "%y", String(VotersYes.length));
-    ReplaceText(result, "%n", String(VotersNo.length));
+    result = Repl(result, "%v", VoteInfo, true);
+    result = Repl(result, "%y", String(VotersYes.length), true);
+    result = Repl(result, "%n", String(VotersNo.length), true);
 
     return result;
 }
@@ -288,7 +259,7 @@ function Vote(string VoteString, PlayerController Sender)
         if ( bVoteInProgress ) {
             if ( Sender.PlayerReplicationInfo.bAdmin ) {
                 VoteInfo @= strForcedByAdmin;
-                ReplaceText(VoteInfo, "%p", Sender.PlayerReplicationInfo.PlayerName);
+                VoteInfo = Repl(VoteInfo, "%p", Sender.PlayerReplicationInfo.PlayerName, true);
                 VoteFailed();
                 return;
             }
@@ -300,7 +271,7 @@ function Vote(string VoteString, PlayerController Sender)
                 }
                 else if ( VotedTeam.TeamIndex < 2 && TeamCaptains[VotedTeam.TeamIndex] == Sender ) {
                     VoteInfo @= strForcedByAdmin;
-                    ReplaceText(VoteInfo, "%p", Sender.PlayerReplicationInfo.PlayerName);
+                    VoteInfo = Repl(VoteInfo, "%p", Sender.PlayerReplicationInfo.PlayerName, true);
                     VoteFailed();
                     return;
                 }
@@ -488,8 +459,8 @@ function StartVoting(PlayerController Initiator)
     }
     else {
         msg = strVoteInitiated;
-        ReplaceText(msg, "%p", Initiator.PlayerReplicationInfo.PlayerName);
-        ReplaceText(msg, "%v", VoteInfo);
+        msg = Repl(msg, "%p", Initiator.PlayerReplicationInfo.PlayerName, true);
+        msg = Repl(msg, "%v", VoteInfo, true);
         BroadcastMessage(chr(27)$chr(200)$chr(200)$chr(1)$msg);
         VHRI.UpdateVoteStatus(self, VHRI.VS_INPROGRESS, VoteInfo, VotersYes.length, VotersNo.length, VoteID);
         VoteSecondsLeft = VoteCountDown;
@@ -519,8 +490,10 @@ function Timer()
             VHRI.UpdateVoteStatus(self, VHRI.VS_FAILED, VoteInfo, VotersYes.length, VotersNo.length, VoteID);
         }
     }
+    else if ( float(VotersYes.length) / MaxVoters() * 100.0 >= VotePercent ) {
+        VotePassed();
+    }
 }
-
 
 function EndVoting()
 {
@@ -539,19 +512,21 @@ function VotePassed(optional String ForcedByPlayerName)
 
     if ( VoteInitiator == none ) {
         BroadcastMessage(chr(27)$chr(200)$chr(1)$chr(1)$strVoteFailedInitiator);
-        VHRI.UpdateVoteStatus(self, VHRI.VS_FAILED, VoteInfo, VotersYes.length, VotersNo.length, VoteID);
+        if ( VHRI != none )
+            VHRI.UpdateVoteStatus(self, VHRI.VS_FAILED, VoteInfo, VotersYes.length, VotersNo.length, VoteID);
         return;
     }
 
     CurrentVotingObject.ApplyVoteValue(VoteIndex, VoteValue);
     msg = strVotePassed;
-    ReplaceText(msg, "%v", VoteInfo);
+    msg = Repl(msg, "%v", VoteInfo, true);
     if ( ForcedByPlayerName != "" ) {
         msg @=  strForcedByAdmin;
-        ReplaceText(msg, "%p", ForcedByPlayerName);
+        msg = Repl(msg, "%p", ForcedByPlayerName, true);
     }
     BroadcastMessage(chr(27)$chr(1)$chr(200)$chr(1)$msg);
-    VHRI.UpdateVoteStatus(self, VHRI.VS_PASSED, VoteInfo, VotersYes.length, VotersNo.length, VoteID);
+    if ( VHRI != none )
+        VHRI.UpdateVoteStatus(self, VHRI.VS_PASSED, VoteInfo, VotersYes.length, VotersNo.length, VoteID);
 }
 
 function VoteFailed()
@@ -562,18 +537,19 @@ function VoteFailed()
     }
     EndVoting();
     BroadcastMessage(chr(27)$chr(200)$chr(1)$chr(1)$strVoteFailed);
-    VHRI.UpdateVoteStatus(self, VHRI.VS_FAILED, VoteInfo, VotersYes.length, VotersNo.length, VoteID);
+    if ( VHRI != none )
+        VHRI.UpdateVoteStatus(self, VHRI.VS_FAILED, VoteInfo, VotersYes.length, VotersNo.length, VoteID);
 }
 
 static function string ParseHelpLine(string s)
 {
-    ReplaceText(s, "%r", chr(27)$chr(200)$chr(1)$chr(1));
-    ReplaceText(s, "%g", chr(27)$chr(1)$chr(200)$chr(1));
-    ReplaceText(s, "%b", chr(27)$chr(1)$chr(100)$chr(200));
-    ReplaceText(s, "%w", chr(27)$chr(200)$chr(200)$chr(200));
-    ReplaceText(s, "%y", chr(27)$chr(200)$chr(200)$chr(1));
-    ReplaceText(s, "%p", chr(27)$chr(200)$chr(1)$chr(200));
-    ReplaceText(s, "%k", chr(27)$chr(64)$chr(64)$chr(64));
+    s = Repl(s, "%r", chr(27)$chr(200)$chr(1)$chr(1), true);
+    s = Repl(s, "%g", chr(27)$chr(1)$chr(200)$chr(1), true);
+    s = Repl(s, "%b", chr(27)$chr(1)$chr(100)$chr(200), true);
+    s = Repl(s, "%w", chr(27)$chr(200)$chr(200)$chr(200), true);
+    s = Repl(s, "%y", chr(27)$chr(200)$chr(200)$chr(1), true);
+    s = Repl(s, "%p", chr(27)$chr(200)$chr(1)$chr(200), true);
+    s = Repl(s, "%k", chr(27)$chr(64)$chr(64)$chr(64), true);
     return s;
 }
 
@@ -645,12 +621,12 @@ function bool IsMyVotingRunning(ScrnVotingOptions VO, int VIndex)
 
 defaultproperties
 {
-    VoteCountDown=70
-    VotePercent=51.000
-    VotePercentCountDown=51.00
-    VoteCoolDown=10
+    VersionNumber=96801
 
-    strVersion="ScrN Voting Handler v%m.%n"
+    VoteCountDown=30
+    VotePercent=51.000
+    VotePercentCountDown=49.00
+    VoteCoolDown=10
 
     strVoteInitiated="%p initiated a vote: %v."
     strVotePassed="Vote passed: %v"
@@ -684,5 +660,5 @@ defaultproperties
 
     bAddToServerPackages=true
 
-    VHReplicationInfoClass=class'ScrnVotingHandlerV4.VHReplicationInfo'
+    VHReplicationInfoClass=class'ScrnVotingHandler.VHReplicationInfo'
 }

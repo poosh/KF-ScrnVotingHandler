@@ -124,7 +124,7 @@ simulated function Destroyed()
 
 defaultproperties
 {
-    InteractionClass=class'ScrnVotingHandlerV4.VHInteraction'
+    InteractionClass=class'ScrnVotingHandler.VHInteraction'
     bNetNotify=true
     bAlwaysRelevant=true
     bOnlyRelevantToOwner=False

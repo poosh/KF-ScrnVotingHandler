@@ -122,25 +122,83 @@ function SendPlayerList(PlayerController Sender)
     }
 }
 
-function PlayerController FindPlayer(string NameOrID)
+function string GetPlayerName(PlayerReplicationInfo PRI)
+{
+    return PRI.PlayerName;
+}
+
+function PlayerController FindPlayerByID(int id)
 {
     local Controller C;
-     local PlayerController PC;
+    local PlayerReplicationInfo PRI;
+
+    if ( id == 0 )
+        return none;
+
+    for ( C = Level.ControllerList; C != none; C = C.NextController ) {
+        PRI = C.PlayerReplicationInfo;
+        if ( PRI == none )
+            continue;
+
+        if ( PRI.PlayerID == id && PlayerController(C) != none ) {
+            return PlayerController(C);
+        }
+    }
+}
+
+function PlayerController FindPlayerByName(string Keyword, optional bool bPartial, optional PlayerController Sender)
+{
+    local Controller C;
+    local PlayerController PC, MatchedPC;
+    local PlayerReplicationInfo PRI;
+    local string s;
+    local array<string> matched;
+    local int i;
+
+    if ( Keyword == "" )
+        return none;
+
+    Keyword = caps(Keyword);
+    for ( C = Level.ControllerList; C != none; C = C.NextController ) {
+        PRI = C.PlayerReplicationInfo;
+        if ( PRI == none || PRI.PlayerName == "WebAdmin" )
+            continue;
+        PC = PlayerController(C);
+        if ( PC == none )
+            continue;
+
+        s = caps(GetPlayerName(PRI));
+        if ( s == Keyword ) {
+            return PC;
+        }
+        else if ( bPartial && InStr(s, Keyword) != -1 ) {
+            matched[matched.length] = s;
+            MatchedPC = PC;
+        }
+    }
+    if ( matched.length == 1 ) {
+        return MatchedPC;
+    }
+    if ( Sender != none && matched.length > 0 ) {
+        for ( i = 0; i < matched.length; ++i ) {
+            Sender.ClientMessage(VotingHandler.ParseHelpLine("%r" $ Repl(matched[i], Keyword, "%g"$Keyword$"%r")));
+        }
+    }
+    return none;
+}
+
+function PlayerController FindPlayer(string NameOrID, optional PlayerController Sender)
+{
+    local int id;
 
     if ( NameOrID == "" || NameOrID == "0" || NameOrID ~= "WebAdmin" )
         return none;
 
-    for ( C = Level.ControllerList; C != None; C = C.NextController ) {
-        PC = PlayerController(C);
-        if ( PC != None && C.PlayerReplicationInfo != None ) {
-            if ( (C.PlayerReplicationInfo.PlayerID > 0 && String(C.PlayerReplicationInfo.PlayerID) == NameOrID)
-                    || C.PlayerReplicationInfo.PlayerName ~= NameOrID )
-            {
-                return PC;
-            }
-        }
+    id = int(NameOrID);
+    if ( id > 0 ) {
+        return FindPlayerByID(id);
     }
-    return none;
+    return FindPlayerByName(NameOrID, Sender != none, Sender);
 }
 
 function SendGroupHelp(PlayerController Sender, string Group)
@@ -157,7 +215,6 @@ function SendGroupHelp(PlayerController Sender, string Group)
     for ( i=0; i<GroupInfo.length; ++i )
         Sender.ClientMessage(GroupInfo[i]);
 }
-
 
 
 defaultproperties
