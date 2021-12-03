@@ -158,6 +158,8 @@ function PlayerController FindPlayerByName(string Keyword, optional bool bPartia
     if ( Keyword == "" )
         return none;
 
+    bPartial = bPartial && len(Keyword) >= 3;  // require at least 3 letters for partial search
+
     Keyword = caps(Keyword);
     for ( C = Level.ControllerList; C != none; C = C.NextController ) {
         PRI = C.PlayerReplicationInfo;

@@ -621,7 +621,7 @@ function bool IsMyVotingRunning(ScrnVotingOptions VO, int VIndex)
 
 defaultproperties
 {
-    VersionNumber=96900
+    VersionNumber=96909
 
     VoteCountDown=30
     VotePercent=51.000
