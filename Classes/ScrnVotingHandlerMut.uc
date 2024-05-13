@@ -10,8 +10,6 @@ var protected array <PlayerController> VotersYes, VotersNo;
 
 var class<ScrnVotingMsg> Msg;
 
-var string strVoteInitiated;
-
 var string VoteInfo; // user-friendly information about current vore
 var protected int VoteIndex;
 var protected string VoteValue; // value to be set, if vote passes
@@ -472,7 +470,7 @@ function StartVoting(PlayerController Initiator)
     }
     else {
         BroadcastMsg(Msg.default.msgVoteInitiated, Initiator.PlayerReplicationInfo);
-        BroadcastMessage(VoteInfo);
+        BroadcastMessage("^y$" $ VoteInfo);
         VHRI.UpdateVoteStatus(self, VHRI.VS_INPROGRESS, VoteInfo, VotersYes.length, VotersNo.length, VoteID);
         VoteSecondsLeft = VoteCountDown;
         SetTimer(1, true);
@@ -531,7 +529,7 @@ function VotePassed(optional PlayerReplicationInfo ForcedPRI, optional int custo
         msgID = Msg.default.msgVotePassed;
     }
     BroadcastMsg(msgID, ForcedPRI);
-    BroadcastMessage(VoteInfo);
+    BroadcastMessage("^g$" $ VoteInfo);
 
     if ( VHRI != none )
         VHRI.UpdateVoteStatus(self, VHRI.VS_PASSED, VoteInfo, VotersYes.length, VotersNo.length, VoteID);
@@ -645,7 +643,7 @@ function bool IsMyVotingRunning(ScrnVotingOptions VO, int VIndex)
 
 defaultproperties
 {
-    VersionNumber=97000
+    VersionNumber=97001
 
     VoteCountDown=30
     VotePercent=51.000
@@ -653,8 +651,6 @@ defaultproperties
     VoteCoolDown=10
 
     Msg=class'ScrnVotingMsg'
-
-    strVoteInitiated="^Y$%p initiated a vote: %v."
 
     HelpInfo(0)="%bVoting Options:"
     HelpInfo(1)="%gHELP %w Show this information"
