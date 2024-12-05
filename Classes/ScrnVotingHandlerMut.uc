@@ -19,6 +19,7 @@ var transient TeamInfo VotedTeam;
 var PlayerController TeamCaptains[2];
 var transient PlayerController VotedPlayer;
 var protected transient bool bVotedPlayer; // if true, VotedPlayer is used in the current vote
+var transient bool bVotedPlayerAutoVote; // ScrnVotingOptions may set it during GetVoteIndex() to make VotedPlayer to autovote YES
 
 var protected array<ScrnVotingOptions> VotingOptions;
 
@@ -288,6 +289,7 @@ function Vote(string VoteString, PlayerController Sender)
         VoteInfo = "";
         VotedPlayer = none;
         VotedTeam = none;
+        bVotedPlayerAutoVote = false;
 
         if ( Divide(VoteString, " ", k, v) ) {
             k = trim(k);
@@ -474,6 +476,9 @@ function StartVoting(PlayerController Initiator)
         VHRI.UpdateVoteStatus(self, VHRI.VS_INPROGRESS, VoteInfo, VotersYes.length, VotersNo.length, VoteID);
         VoteSecondsLeft = VoteCountDown;
         SetTimer(1, true);
+        if (bVotedPlayerAutoVote && bVotedPlayer) {
+            Vote("YES", VotedPlayer);
+        }
     }
 }
 
@@ -643,7 +648,7 @@ function bool IsMyVotingRunning(ScrnVotingOptions VO, int VIndex)
 
 defaultproperties
 {
-    VersionNumber=97001
+    VersionNumber=97100
 
     VoteCountDown=30
     VotePercent=51.000

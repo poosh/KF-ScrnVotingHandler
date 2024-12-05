@@ -297,6 +297,6 @@ defaultproperties
     strVotedNo="NO = "
     strKeyToVoteYes=" (press %k to vote)"
     strKeyToVoteNo=" (press %k to vote)"
-    strNoKeySetYes=" (type MUTATE VOTE YES in console to vote)"
-    strNoKeySetNo=" (type MUTATE VOTE NO in console to vote)"
+    strNoKeySetYes=" (say !YES to vote)"
+    strNoKeySetNo=" (say !NO to vote)"
 }
