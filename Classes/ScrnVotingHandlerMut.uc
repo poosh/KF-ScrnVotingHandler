@@ -13,6 +13,7 @@ var class<ScrnVotingMsg> Msg;
 var string VoteInfo; // user-friendly information about current vore
 var protected int VoteIndex;
 var protected string VoteValue; // value to be set, if vote passes
+var protected string VoteCommand;
 var protected ScrnVotingOptions CurrentVotingObject; //objects that controls current vote value
 var transient PlayerController VoteInitiator;
 var transient TeamInfo VotedTeam;
@@ -179,6 +180,11 @@ function Vote(string VoteString, PlayerController Sender)
 
     VoteString = caps(Trim(VoteString));
 
+    if (bVoteInProgress && VoteString == VoteCommand) {
+        // merge duplicate votes
+        VoteString = "YES";
+    }
+
     if ( VoteString == "" || VoteString == "HELP" || VoteString ~= "INFO"  || VoteString ~= "?") {
         SendHelp(Sender);
     }
@@ -336,6 +342,7 @@ function Vote(string VoteString, PlayerController Sender)
                         VoteValue = v;
                         if ( VoteInfo == "" )
                             VoteInfo = g @ k @ v;
+                        VoteCommand = VoteString;
                         StartVoting(Sender);
                 }
             }
@@ -364,6 +371,7 @@ function Vote(string VoteString, PlayerController Sender)
                             VoteValue = v;
                             if ( VoteInfo == "" )
                                 VoteInfo = k @ v;
+                            VoteCommand = VoteString;
                             StartVoting(Sender);
                     }
                     return;
@@ -648,7 +656,7 @@ function bool IsMyVotingRunning(ScrnVotingOptions VO, int VIndex)
 
 defaultproperties
 {
-    VersionNumber=97100
+    VersionNumber=97107
 
     VoteCountDown=30
     VotePercent=51.000
