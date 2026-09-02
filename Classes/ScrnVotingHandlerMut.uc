@@ -197,12 +197,12 @@ function Vote(string VoteString, PlayerController Sender)
             SendMsg(Sender, Msg.default.msgVoteStatus);
         }
     }
-    else if (Sender.PlayerReplicationInfo.bOnlySpectator && !class'ScrnF'.static.IsAdmin(Sender)) {
+    else if (Sender.PlayerReplicationInfo.bOnlySpectator && !IsAdmin(Sender)) {
         SendMsg(Sender, Msg.default.msgSpectatorsCantVote);
     }
     else if ( VoteString == "YES" || VoteString == "TRYYES" ) {
         if ( bVoteInProgress ) {
-            if ( Sender.PlayerReplicationInfo.bAdmin ) {
+            if (IsAdmin(Sender)) {
                 VotePassed(Sender.PlayerReplicationInfo);
                 return;
             }
@@ -245,7 +245,7 @@ function Vote(string VoteString, PlayerController Sender)
     }
     else if ( VoteString == "NO" || VoteString == "TRYNO" ) {
         if ( bVoteInProgress ) {
-            if ( Sender.PlayerReplicationInfo.bAdmin ) {
+            if (IsAdmin(Sender)) {
                 VoteFailed(Sender.PlayerReplicationInfo);
                 return;
             }
@@ -391,7 +391,7 @@ function bool MayStartVoting(PlayerController Sender)
     if ( Sender.PlayerReplicationInfo == none )
         return false;
     // admins can always vote
-    if ( Sender.PlayerReplicationInfo.bAdmin )
+    if ( IsAdmin(Sender) )
         return true;
     // spectators can't vote
     if ( Sender.PlayerReplicationInfo.bOnlySpectator )
@@ -469,7 +469,7 @@ function StartVoting(PlayerController Initiator)
     bVoteInProgress = true;
     VoteID++;
 
-    if ( Level.NetMode == NM_Standalone || Initiator.PlayerReplicationInfo.bAdmin ) {
+    if (IsAdmin(Initiator)) {
         VotePassed(Initiator.PlayerReplicationInfo);
     }
     else if ( MaxVoters() == 1 && !Initiator.PlayerReplicationInfo.bOnlySpectator ) {
@@ -653,10 +653,30 @@ function bool IsMyVotingRunning(ScrnVotingOptions VO, int VIndex)
     return bVoteInProgress && CurrentVotingObject == VO && (VoteIndex == VIndex || VIndex == -1);
 }
 
+function bool IsAdmin(PlayerController Sender)
+{
+    // FFKills is RO-specific variable, unused in KF.
+    // We reuse it to specify voting admins who have no server admin rights (e.g., game referees)
+    return Sender.PlayerReplicationInfo.bAdmin || Sender.PlayerReplicationInfo.bSilentAdmin
+            || Sender.PlayerReplicationInfo.FFKills ~= 1337
+            || Level.NetMode == NM_Standalone
+            || (Level.NetMode == NM_ListenServer && NetConnection(Sender.Player) == none);
+}
+
+function SetVotingAdmin(PlayerController Sender, bool bEnable)
+{
+    if (bEnable) {
+        Sender.PlayerReplicationInfo.FFKills = 1337;
+    }
+    else {
+        Sender.PlayerReplicationInfo.FFKills = 0;
+    }
+}
+
 
 defaultproperties
 {
-    VersionNumber=97400
+    VersionNumber=97430
 
     VoteCountDown=30
     VotePercent=51.000

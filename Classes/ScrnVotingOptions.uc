@@ -124,7 +124,7 @@ function SendPlayerList(PlayerController Sender)
 
 function string GetPlayerName(PlayerReplicationInfo PRI)
 {
-    return PRI.PlayerName;
+    return class'ScrnF'.static.PlainPlayerName(PRI);
 }
 
 function PlayerController FindPlayerByID(int id)
