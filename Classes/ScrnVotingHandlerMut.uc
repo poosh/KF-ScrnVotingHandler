@@ -676,7 +676,7 @@ function SetVotingAdmin(PlayerController Sender, bool bEnable)
 
 defaultproperties
 {
-    VersionNumber=97430
+    VersionNumber=97450
 
     VoteCountDown=30
     VotePercent=51.000
